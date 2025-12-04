@@ -17,6 +17,10 @@ class SectionRepository {
     return _sectionDao.watchForSong(songId);
   }
 
+  Future<List<Section>> getSectionsForSong(String songId) {
+    return _sectionDao.getForSong(songId);
+  }
+
   Stream<Section?> watchSectionById(String id) {
     return _sectionDao.watchById(id);
   }

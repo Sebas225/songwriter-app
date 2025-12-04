@@ -6,6 +6,7 @@ import 'demo_data_seeder.dart';
 import 'repositories/line_repository.dart';
 import 'repositories/section_repository.dart';
 import 'repositories/song_repository.dart';
+import 'song_json_service.dart';
 
 final databaseProvider = Provider<AppDatabase>((ref) {
   final db = AppDatabase();
@@ -61,6 +62,19 @@ final demoDataSeederProvider = Provider<DemoDataSeeder>((ref) {
 final demoDataInitializerProvider = FutureProvider<void>((ref) {
   final seeder = ref.watch(demoDataSeederProvider);
   return seeder.seedIfEmpty();
+});
+
+final songJsonServiceProvider = Provider<SongJsonService>((ref) {
+  final songRepository = ref.watch(songRepositoryProvider);
+  final sectionRepository = ref.watch(sectionRepositoryProvider);
+  final lineRepository = ref.watch(lineRepositoryProvider);
+  final uuid = ref.watch(uuidProvider);
+  return SongJsonService(
+    songRepository,
+    sectionRepository,
+    lineRepository,
+    uuid,
+  );
 });
 
 final songsProvider = StreamProvider<List<Song>>((ref) {
