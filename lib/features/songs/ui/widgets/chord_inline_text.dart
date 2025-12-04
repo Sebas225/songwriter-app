@@ -42,7 +42,7 @@ class ChordInlineText extends StatelessWidget {
         if (showErrors) {
           final display = chordRaw.isEmpty ? 'acorde inválido' : chordRaw;
           spans.add(
-            _buildInvalidSpan(display, 'Falta cerrar corchete de acorde', errorStyle),
+            _buildInvalidSpan(display, 'Cierra el acorde con ]', errorStyle),
           );
         } else {
           spans.add(TextSpan(text: rawText.substring(start)));
@@ -53,7 +53,7 @@ class ChordInlineText extends StatelessWidget {
       final chordRaw = rawText.substring(start + 1, end).trim();
 
       if (chordRaw.isEmpty) {
-        spans.add(_buildInvalidSpan('acorde inválido', 'Acorde vacío', errorStyle));
+        spans.add(_buildInvalidSpan('acorde inválido', 'Escribe un acorde', errorStyle));
       } else {
         try {
           final chord = parseChord(chordRaw);
@@ -67,7 +67,7 @@ class ChordInlineText extends StatelessWidget {
             ),
           );
         } on FormatException catch (e) {
-          spans.add(_buildInvalidSpan(chordRaw, e.message ?? 'Acorde inválido', errorStyle));
+          spans.add(_buildInvalidSpan(chordRaw, e.message ?? 'No reconozco el acorde', errorStyle));
         }
       }
 

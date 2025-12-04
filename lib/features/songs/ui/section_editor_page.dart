@@ -55,13 +55,17 @@ class _SectionEditorPageState extends ConsumerState<SectionEditorPage> {
             return const Center(child: Text('Sección no encontrada'));
           }
 
-          return Padding(
+                  return Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
               children: [
                 TextFormField(
                   controller: _sectionNameController,
-                  decoration: const InputDecoration(labelText: 'Nombre de sección'),
+                  style: const TextStyle(fontSize: 18),
+                  decoration: const InputDecoration(
+                    labelText: 'Nombre de sección',
+                    hintText: 'Ej. Intro, Verso 1 o Coro',
+                  ),
                   onChanged: (value) {
                     final updated = section.copyWith(name: value, order: section.order);
                     ref.read(sectionRepositoryProvider).updateSection(updated);
@@ -95,12 +99,20 @@ class _SectionEditorPageState extends ConsumerState<SectionEditorPage> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text('Línea ${index + 1}'),
+                                  Text(
+                                    'Línea ${index + 1}',
+                                    style: const TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
                                   TextField(
                                     controller: controller,
                                     maxLines: null,
+                                    style: const TextStyle(fontSize: 17),
                                     decoration: const InputDecoration(
-                                      hintText: 'Escribe acordes con [C] y texto',
+                                      hintText:
+                                          'Ej. [C]Escribe aquí tu línea con acordes y texto',
                                     ),
                                     onChanged: (value) {
                                       final updated = line.copyWith(rawText: value);
