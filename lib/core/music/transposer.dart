@@ -29,6 +29,27 @@ class TranspositionResult {
   final List<Line> lines;
 }
 
+class RomanDegree {
+  const RomanDegree._(this.symbol, this.isDiatonic);
+
+  factory RomanDegree.diatonic(String symbol) => RomanDegree._(symbol, true);
+  factory RomanDegree.nonDiatonic() => const RomanDegree._('ND', false);
+
+  final String symbol;
+  final bool isDiatonic;
+
+  @override
+  bool operator ==(Object other) {
+    return other is RomanDegree && other.symbol == symbol && other.isDiatonic == isDiatonic;
+  }
+
+  @override
+  int get hashCode => Object.hash(symbol, isDiatonic);
+
+  @override
+  String toString() => symbol;
+}
+
 const _sharpNames = [
   'C',
   'C#',
@@ -101,6 +122,34 @@ final List<KeySignature> allKeySignatures = (() {
   return list;
 })();
 
+class _DegreePattern {
+  const _DegreePattern({required this.semitone, required this.symbol, required this.quality});
+
+  final int semitone;
+  final String symbol;
+  final Quality quality;
+}
+
+const _majorDegreePatterns = [
+  _DegreePattern(semitone: 0, symbol: 'I', quality: Quality.major),
+  _DegreePattern(semitone: 2, symbol: 'ii', quality: Quality.minor),
+  _DegreePattern(semitone: 4, symbol: 'iii', quality: Quality.minor),
+  _DegreePattern(semitone: 5, symbol: 'IV', quality: Quality.major),
+  _DegreePattern(semitone: 7, symbol: 'V', quality: Quality.major),
+  _DegreePattern(semitone: 9, symbol: 'vi', quality: Quality.minor),
+  _DegreePattern(semitone: 11, symbol: 'vii°', quality: Quality.diminished),
+];
+
+const _minorDegreePatterns = [
+  _DegreePattern(semitone: 0, symbol: 'i', quality: Quality.minor),
+  _DegreePattern(semitone: 2, symbol: 'ii°', quality: Quality.diminished),
+  _DegreePattern(semitone: 3, symbol: 'III', quality: Quality.major),
+  _DegreePattern(semitone: 5, symbol: 'iv', quality: Quality.minor),
+  _DegreePattern(semitone: 7, symbol: 'v', quality: Quality.minor),
+  _DegreePattern(semitone: 8, symbol: 'VI', quality: Quality.major),
+  _DegreePattern(semitone: 10, symbol: 'VII', quality: Quality.major),
+];
+
 int _wrapIndex(int index) {
   var wrapped = index % 12;
   if (wrapped < 0) wrapped += 12;
@@ -121,6 +170,55 @@ Note _fromIndex(int index, {required bool preferFlats}) {
 }
 
 bool _preferFlats(Note note) => note.symbol.contains('b');
+
+List<Note> buildDiatonicScale(KeySignature key) {
+  final patterns = key.isMinor ? _minorDegreePatterns : _majorDegreePatterns;
+  final tonicIndex = noteToSemitone(key.tonic);
+  final preferFlats = preferFlatsForKey(key);
+
+  return patterns
+      .map(
+        (pattern) => _fromIndex(
+          tonicIndex + pattern.semitone,
+          preferFlats: preferFlats,
+        ),
+      )
+      .toList();
+}
+
+RomanDegree getDegree(Chord chord, KeySignature key) {
+  final patterns = key.isMinor ? _minorDegreePatterns : _majorDegreePatterns;
+  final tonicIndex = noteToSemitone(key.tonic);
+  final chordIndex = _wrapIndex(noteToSemitone(chord.root));
+
+  for (final pattern in patterns) {
+    final degreeIndex = _wrapIndex(tonicIndex + pattern.semitone);
+    if (degreeIndex == chordIndex) {
+      if (_qualityMatches(chord.quality, pattern.quality)) {
+        return RomanDegree.diatonic(pattern.symbol);
+      }
+      return RomanDegree.nonDiatonic();
+    }
+  }
+
+  return RomanDegree.nonDiatonic();
+}
+
+bool _qualityMatches(Quality chordQuality, Quality expected) {
+  if (expected == Quality.major) {
+    return chordQuality == Quality.major ||
+        chordQuality == Quality.suspended2 ||
+        chordQuality == Quality.suspended4 ||
+        chordQuality == Quality.power;
+  }
+  if (expected == Quality.minor) {
+    return chordQuality == Quality.minor;
+  }
+  if (expected == Quality.diminished) {
+    return chordQuality == Quality.diminished;
+  }
+  return chordQuality == expected;
+}
 
 Note transposeNote(Note note, int semitones, {bool? preferFlats}) {
   final baseIndex = noteToSemitone(note);

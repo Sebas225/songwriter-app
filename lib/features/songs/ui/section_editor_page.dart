@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/database/app_database.dart';
+import '../../../core/music/chord.dart';
+import '../../../core/music/transposer.dart';
 import '../data/providers.dart';
 import 'widgets/chord_inline_text.dart';
 
@@ -32,8 +34,10 @@ class _SectionEditorPageState extends ConsumerState<SectionEditorPage> {
 
   @override
   Widget build(BuildContext context) {
+    final songAsync = ref.watch(songProvider(widget.songId));
     final sectionAsync = ref.watch(sectionProvider(widget.sectionId));
     final linesAsync = ref.watch(linesForSectionProvider(widget.sectionId));
+    final keySignature = _keyFromSong(songAsync.valueOrNull);
 
     sectionAsync.whenData((section) {
       if (section != null && _sectionNameController == null) {
@@ -109,7 +113,10 @@ class _SectionEditorPageState extends ConsumerState<SectionEditorPage> {
                                   ValueListenableBuilder<TextEditingValue>(
                                     valueListenable: controller,
                                     builder: (context, value, _) {
-                                      return ChordInlineText(rawText: value.text);
+                                      return ChordInlineText(
+                                        rawText: value.text,
+                                        keySignature: keySignature,
+                                      );
                                     },
                                   ),
                                   Align(
@@ -175,5 +182,10 @@ class _SectionEditorPageState extends ConsumerState<SectionEditorPage> {
       rawText: const Value(''),
     );
     await ref.read(lineRepositoryProvider).createLine(entry);
+  }
+
+  KeySignature _keyFromSong(Song? song) {
+    return parseKeySignature(song?.currentKey ?? song?.originalKey) ??
+        KeySignature(tonic: Note.parse('C'));
   }
 }

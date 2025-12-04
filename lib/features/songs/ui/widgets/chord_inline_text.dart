@@ -1,11 +1,19 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/music/chord.dart';
 import '../../../../core/music/chord_parser.dart';
+import '../../../../core/music/transposer.dart';
 
 class ChordInlineText extends StatelessWidget {
-  const ChordInlineText({super.key, required this.rawText, this.showErrors = true});
+  const ChordInlineText({
+    super.key,
+    required this.rawText,
+    required this.keySignature,
+    this.showErrors = true,
+  });
 
   final String rawText;
+  final KeySignature keySignature;
   final bool showErrors;
 
   @override
@@ -48,8 +56,16 @@ class ChordInlineText extends StatelessWidget {
         spans.add(_buildInvalidSpan('acorde inválido', 'Acorde vacío', errorStyle));
       } else {
         try {
-          parseChord(chordRaw);
-          spans.add(TextSpan(text: chordRaw, style: chordStyle));
+          final chord = parseChord(chordRaw);
+          final degree = getDegree(chord, keySignature);
+          spans.add(
+            TextSpan(
+              children: [
+                TextSpan(text: chordRaw, style: chordStyle),
+                TextSpan(text: ' (${degree.symbol})'),
+              ],
+            ),
+          );
         } on FormatException catch (e) {
           spans.add(_buildInvalidSpan(chordRaw, e.message ?? 'Acorde inválido', errorStyle));
         }
