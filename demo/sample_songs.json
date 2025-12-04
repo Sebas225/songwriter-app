@@ -1,0 +1,102 @@
+[
+  {
+    "title": "Caminos de Luz",
+    "artist": "Luna Rivera",
+    "originalKey": "G",
+    "tempoBpm": 96,
+    "sections": [
+      {
+        "name": "Verso 1",
+        "lines": [
+          "[G]Salí buscando [D/F#]algo más en la [Em7]ciudad",
+          "[Cadd9]El viento dijo [G/B]que el miedo [Am7]no es verdad [D7]",
+          "[G]Luces lejanas [D/F#]dibujaban el [Em7]final",
+          "[C]pero en tu risa [Am7]vi un puente [D7]para saltar"
+        ]
+      },
+      {
+        "name": "Coro",
+        "lines": [
+          "[Cmaj7]Ven conmigo a los [G]caminos de [D/F#]luz",
+          "[Em7]Vibran las calles [Bm7]cuando dices que [C]sí",
+          "[Am7(b5)]Cruzan relámpagos [D7]pero el puente [G]se abre a ti"
+        ]
+      },
+      {
+        "name": "Puente",
+        "lines": [
+          "[Em7]Suenan motores en [Cmaj7]compás [D7(#9)]de la noche",
+          "[G]Sigo tus pasos [B7(#11)]sin perder la [C]fe",
+          "[Am7]Si la sombra regresa [D/F#]le cantamos otra [G]vez"
+        ]
+      }
+    ]
+  },
+  {
+    "title": "Lluvia en la Azotea",
+    "artist": "Astro Sur",
+    "originalKey": "Dm",
+    "tempoBpm": 82,
+    "sections": [
+      {
+        "name": "Verso 1",
+        "lines": [
+          "[Dm]Gotean luces sobre [Bb]techos de metal",
+          "[F]Bajo la antena un [C/E]gato sueña [Dm]igual",
+          "[Gm7]Late la radio en [A7]modo temporal"
+        ]
+      },
+      {
+        "name": "Coro",
+        "lines": [
+          "[Bbmaj9]Pero en tus manos [C]todo suena a [F]sol",
+          "[Dm7]Cada relámpago [Gm7]cae en [A7]nuestro control",
+          "[Dm]Somos la lluvia [C/E]que rompe el [F]calor",
+          "[Gm7]un pequeño [A7(b9)]coro sobre el [Dm]bulevar"
+        ]
+      },
+      {
+        "name": "Puente",
+        "lines": [
+          "[F]Cuando el cielo se [A7]abre deja ver [Dm]la señal",
+          "[Bb]Notas mojadas [C]suben en [F]espiral",
+          "[Gm7]Hay un compás [A7#5]que nos deja [Dm]respirar"
+        ]
+      }
+    ]
+  },
+  {
+    "title": "Horizonte Eléctrico",
+    "artist": "Neón Andino",
+    "originalKey": "A",
+    "tempoBpm": 110,
+    "sections": [
+      {
+        "name": "Verso 1",
+        "lines": [
+          "[A]Cables brillan [E/G#]sobre el [F#m7]mar",
+          "[Dmaj7]Vuela una frase [A/C#]que no quiere [Bm7]aterrizar [E7]",
+          "[A]Motores suaves [E/G#]dibujan [F#m7]el plan",
+          "[D]La noche [Bm7]cambia a [E7(#9)]neón"
+        ]
+      },
+      {
+        "name": "Coro",
+        "lines": [
+          "[A]Ven, que el [E/G#]horizonte es [F#m7]eléctrico",
+          "[Dmaj7]Baila la pista [A/C#]cuando dices [Bm7]que sí",
+          "[C#m7(b5)]Nada nos frena [F#7]ni el ruido [Bm7]del tren",
+          "[E7]Solo [A]sigue aquí"
+        ]
+      },
+      {
+        "name": "Puente",
+        "lines": [
+          "[F#m7]Si cae la tensión [D]sostenemos la [A]línea",
+          "[E]Con un coro [C#7]que desafía el [F#m7]final",
+          "[Bm7]Y un delay [E7]que resuena [A]sin parar"
+        ]
+      }
+    ]
+  }
+]
