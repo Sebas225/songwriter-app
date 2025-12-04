@@ -15,6 +15,7 @@ class SongwriterApp extends ConsumerWidget {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
         useMaterial3: true,
+        textTheme: ThemeData().textTheme.apply(fontSizeFactor: 1.1),
       ),
       routerConfig: router,
     );

@@ -18,25 +18,36 @@ class HomePage extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Songwriter'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add),
-            tooltip: 'Crear canción',
-            onPressed: () => context.goNamed('songCreate'),
-          ),
-        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
             TextField(
+              style: const TextStyle(fontSize: 18),
               decoration: const InputDecoration(
-                labelText: 'Buscar',
+                labelText: 'Busca por título o artista',
+                hintText: 'Ej. “Cielito lindo”',
                 prefixIcon: Icon(Icons.search),
               ),
               onChanged: (value) =>
                   ref.read(songSearchQueryProvider.notifier).state = value,
+            ),
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                icon: const Icon(Icons.add, size: 28),
+                style: FilledButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 18),
+                  textStyle: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                label: const Text('Nueva canción'),
+                onPressed: () => context.goNamed('songCreate'),
+              ),
             ),
             const SizedBox(height: 16),
             Expanded(
@@ -51,7 +62,11 @@ class HomePage extends ConsumerWidget {
 
                   if (filtered.isEmpty) {
                     return const Center(
-                      child: Text('No hay canciones. Crea una nueva.'),
+                      child: Text(
+                        'No hay canciones todavía. Toca “Nueva canción”.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(fontSize: 18),
+                      ),
                     );
                   }
 
@@ -62,16 +77,29 @@ class HomePage extends ConsumerWidget {
                       final song = filtered[index];
                       return Card(
                         child: ListTile(
-                          title: Text(song.title),
+                          title: Text(
+                            song.title,
+                            style: const TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
                           subtitle: song.artist != null
-                              ? Text(song.artist!)
-                              : const Text('Artista desconocido'),
+                              ? Text(
+                                  song.artist!,
+                                  style: const TextStyle(fontSize: 16),
+                                )
+                              : const Text(
+                                  'Artista desconocido',
+                                  style: TextStyle(fontSize: 16),
+                                ),
                           onTap: () => context.goNamed(
                             'songDetail',
                             pathParameters: {'id': song.id},
                           ),
                           trailing: IconButton(
                             icon: const Icon(Icons.delete),
+                            tooltip: 'Eliminar canción',
                             onPressed: () => _confirmDelete(context, ref, song),
                           ),
                         ),

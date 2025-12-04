@@ -66,7 +66,11 @@ class _SongFormPageState extends ConsumerState<SongFormPage> {
               children: [
                 TextFormField(
                   controller: _titleController,
-                  decoration: const InputDecoration(labelText: 'Título'),
+                  style: const TextStyle(fontSize: 18),
+                  decoration: const InputDecoration(
+                    labelText: 'Título',
+                    hintText: 'Ej. Tu canción favorita',
+                  ),
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
                       return 'Ingresa un título';
@@ -77,13 +81,24 @@ class _SongFormPageState extends ConsumerState<SongFormPage> {
                 const SizedBox(height: 12),
                 TextFormField(
                   controller: _artistController,
-                  decoration: const InputDecoration(labelText: 'Artista'),
+                  style: const TextStyle(fontSize: 18),
+                  decoration: const InputDecoration(
+                    labelText: 'Artista',
+                    hintText: 'Opcional: quién la canta',
+                  ),
                 ),
                 const Spacer(),
                 SizedBox(
                   width: double.infinity,
                   child: FilledButton.icon(
                     icon: const Icon(Icons.save),
+                    style: FilledButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      textStyle: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                     label: Text(widget.isEditing ? 'Actualizar' : 'Crear'),
                     onPressed: () => _submit(context),
                   ),
@@ -140,6 +155,9 @@ class _SongFormPageState extends ConsumerState<SongFormPage> {
     }
 
     if (createdOrUpdated != null && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Guardado ✅')),
+      );
       context.goNamed(
         'songDetail',
         pathParameters: {'id': createdOrUpdated.id},
