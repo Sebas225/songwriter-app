@@ -4,8 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/database/app_database.dart';
-import '../../../core/music/chord_parser.dart';
 import '../data/providers.dart';
+import 'widgets/chord_inline_text.dart';
 
 class SectionEditorPage extends ConsumerStatefulWidget {
   const SectionEditorPage({super.key, required this.songId, required this.sectionId});
@@ -109,7 +109,7 @@ class _SectionEditorPageState extends ConsumerState<SectionEditorPage> {
                                   ValueListenableBuilder<TextEditingValue>(
                                     valueListenable: controller,
                                     builder: (context, value, _) {
-                                      return _ChordPreview(rawText: value.text);
+                                      return ChordInlineText(rawText: value.text);
                                     },
                                   ),
                                   Align(
@@ -177,90 +177,3 @@ class _SectionEditorPageState extends ConsumerState<SectionEditorPage> {
     await ref.read(lineRepositoryProvider).createLine(entry);
   }
 }
-
-class _ChordPreview extends StatelessWidget {
-  const _ChordPreview({required this.rawText});
-
-  final String rawText;
-
-  @override
-  Widget build(BuildContext context) {
-    final defaultStyle = Theme.of(context).textTheme.bodyMedium;
-    final chordStyle = defaultStyle?.copyWith(fontWeight: FontWeight.bold);
-    final errorStyle = chordStyle?.copyWith(color: Colors.red);
-
-    final spans = <InlineSpan>[];
-    var index = 0;
-
-    while (index < rawText.length) {
-      final start = rawText.indexOf('[', index);
-      if (start == -1) {
-        spans.add(TextSpan(text: rawText.substring(index)));
-        break;
-      }
-
-      if (start > index) {
-        spans.add(TextSpan(text: rawText.substring(index, start)));
-      }
-
-      final end = rawText.indexOf(']', start + 1);
-      if (end == -1) {
-        final chordRaw = rawText.substring(start + 1).trim();
-        final message = 'Falta cerrar corchete de acorde';
-        final display = chordRaw.isEmpty ? 'acorde inválido' : chordRaw;
-        spans.add(
-          WidgetSpan(
-            alignment: PlaceholderAlignment.baseline,
-            baseline: TextBaseline.alphabetic,
-            child: Tooltip(
-              message: message,
-              child: Text(display, style: errorStyle),
-            ),
-          ),
-        );
-        break;
-      }
-
-      final chordRaw = rawText.substring(start + 1, end).trim();
-
-      if (chordRaw.isEmpty) {
-        spans.add(
-          WidgetSpan(
-            alignment: PlaceholderAlignment.baseline,
-            baseline: TextBaseline.alphabetic,
-            child: Tooltip(
-              message: 'Acorde vacío',
-              child: Text('acorde inválido', style: errorStyle),
-            ),
-          ),
-        );
-      } else {
-        try {
-          parseChord(chordRaw);
-          spans.add(TextSpan(text: chordRaw, style: chordStyle));
-        } on FormatException catch (e) {
-          spans.add(
-            WidgetSpan(
-              alignment: PlaceholderAlignment.baseline,
-              baseline: TextBaseline.alphabetic,
-              child: Tooltip(
-                message: e.message ?? 'Acorde inválido',
-                child: Text(chordRaw, style: errorStyle),
-              ),
-            ),
-          );
-        }
-      }
-
-      index = end + 1;
-    }
-
-    return RichText(
-      text: TextSpan(
-        style: defaultStyle,
-        children: spans.isEmpty ? [const TextSpan(text: '')] : spans,
-      ),
-    );
-  }
-}
-

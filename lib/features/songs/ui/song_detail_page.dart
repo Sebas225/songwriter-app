@@ -4,7 +4,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/database/app_database.dart';
+import '../../../core/music/chord.dart';
+import '../../../core/music/transposer.dart';
 import '../data/providers.dart';
+import 'widgets/chord_inline_text.dart';
 
 class SongDetailPage extends ConsumerWidget {
   const SongDetailPage({super.key, required this.songId});
@@ -46,6 +49,9 @@ class SongDetailPage extends ConsumerWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(song.artist ?? 'Artista desconocido'),
+                const SizedBox(height: 8),
+                if (song.currentKey != null || song.originalKey != null)
+                  Text('Tono: ${song.currentKey ?? song.originalKey}'),
                 const SizedBox(height: 16),
                 Row(
                   children: [
@@ -53,6 +59,12 @@ class SongDetailPage extends ConsumerWidget {
                       icon: const Icon(Icons.playlist_add),
                       label: const Text('Agregar sección'),
                       onPressed: () => _createSection(context, ref, sectionsAsync),
+                    ),
+                    const SizedBox(width: 8),
+                    OutlinedButton.icon(
+                      icon: const Icon(Icons.swap_calls),
+                      label: const Text('Transponer'),
+                      onPressed: () => _openTransposeDialog(context, ref, song),
                     ),
                   ],
                 ),
@@ -123,11 +135,20 @@ class SongDetailPage extends ConsumerWidget {
                                             return const Text('Sin líneas');
                                           }
                                           return Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: lines
-                                                .map((line) => Text(line.rawText))
-                                                .toList(),
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: lines
+                                                  .map(
+                                                    (line) => Padding(
+                                                      padding: const EdgeInsets.symmetric(
+                                                          vertical: 4),
+                                                      child: ChordInlineText(
+                                                        rawText: line.rawText,
+                                                        showErrors: false,
+                                                      ),
+                                                    ),
+                                                  )
+                                                  .toList(),
                                           );
                                         },
                                         loading: () =>
@@ -214,6 +235,110 @@ class SongDetailPage extends ConsumerWidget {
         );
       }
     }
+  }
+
+  Future<void> _openTransposeDialog(
+    BuildContext context,
+    WidgetRef ref,
+    Song song,
+  ) async {
+    final currentKey = _currentKeyOrDefault(song);
+    var selected = currentKey;
+
+    final chosenKey = await showDialog<KeySignature>(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: const Text('Transponer'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Tono actual: ${keySignatureLabel(currentKey)}'),
+                  const SizedBox(height: 12),
+                  DropdownButton<KeySignature>(
+                    value: selected,
+                    isExpanded: true,
+                    onChanged: (value) {
+                      if (value != null) {
+                        setState(() => selected = value);
+                      }
+                    },
+                    items: allKeySignatures
+                        .map(
+                          (key) => DropdownMenuItem(
+                            value: key,
+                            child: Text(keySignatureLabel(key)),
+                          ),
+                        )
+                        .toList(),
+                  ),
+                  const SizedBox(height: 8),
+                  Text('Nuevo tono: ${keySignatureLabel(selected)}'),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('Cancelar'),
+                ),
+                FilledButton(
+                  onPressed: () => Navigator.of(context).pop(selected),
+                  child: const Text('Aplicar'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+
+    if (chosenKey != null) {
+      await _applyTransposition(context, ref, song, chosenKey);
+    }
+  }
+
+  Future<void> _applyTransposition(
+    BuildContext context,
+    WidgetRef ref,
+    Song song,
+    KeySignature newKey,
+  ) async {
+    try {
+      final sections =
+          await ref.read(sectionRepositoryProvider).watchSectionsForSong(song.id).first;
+      final lines = <Line>[];
+      for (final section in sections) {
+        final sectionLines =
+            await ref.read(lineRepositoryProvider).watchLinesForSection(section.id).first;
+        lines.addAll(sectionLines);
+      }
+
+      final result = transposeSong(song, newKey, lines: lines);
+      for (final line in result.lines) {
+        await ref.read(lineRepositoryProvider).updateLine(line);
+      }
+      await ref.read(songRepositoryProvider).updateSong(result.song);
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Transpuesta a ${keySignatureLabel(newKey)}')),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error al transponer: $e')),
+        );
+      }
+    }
+  }
+
+  KeySignature _currentKeyOrDefault(Song song) {
+    return parseKeySignature(song.currentKey ?? song.originalKey) ??
+        KeySignature(tonic: Note.parse('C'));
   }
 }
 
