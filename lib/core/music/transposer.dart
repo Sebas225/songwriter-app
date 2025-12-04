@@ -204,6 +204,75 @@ RomanDegree getDegree(Chord chord, KeySignature key) {
   return RomanDegree.nonDiatonic();
 }
 
+KeySignature inferKeyFromChords(List<Chord> chords) {
+  if (chords.isEmpty) {
+    return KeySignature(tonic: Note.parse('C'));
+  }
+
+  KeySignature? bestKey;
+  var bestScore = -1;
+
+  for (final key in allKeySignatures) {
+    var score = 0;
+
+    for (final chord in chords) {
+      if (_isDiatonicInKey(chord, key)) {
+        score += 2;
+      } else if (_isBorrowedInKey(chord, key)) {
+        score += 1;
+      }
+    }
+
+    if (score > bestScore) {
+      bestScore = score;
+      bestKey = key;
+    }
+  }
+
+  return bestKey ?? KeySignature(tonic: Note.parse('C'));
+}
+
+bool _isDiatonicInKey(Chord chord, KeySignature key) {
+  final patterns = key.isMinor ? _minorDegreePatterns : _majorDegreePatterns;
+  final tonicIndex = noteToSemitone(key.tonic);
+  final chordIndex = _wrapIndex(noteToSemitone(chord.root));
+
+  for (final pattern in patterns) {
+    final degreeIndex = _wrapIndex(tonicIndex + pattern.semitone);
+    if (degreeIndex == chordIndex && _qualityMatches(chord.quality, pattern.quality)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+bool _isBorrowedInKey(Chord chord, KeySignature key) {
+  final tonicIndex = noteToSemitone(key.tonic);
+
+  final borrowedPatterns = <_DegreePattern>[
+    const _DegreePattern(semitone: 10, symbol: 'bVII', quality: Quality.major),
+    const _DegreePattern(semitone: 5, symbol: 'iv', quality: Quality.minor),
+  ];
+
+  if (!key.isMinor) {
+    borrowedPatterns.add(
+      const _DegreePattern(semitone: 4, symbol: 'V/vi', quality: Quality.major),
+    );
+  }
+
+  final chordIndex = _wrapIndex(noteToSemitone(chord.root));
+
+  for (final pattern in borrowedPatterns) {
+    final degreeIndex = _wrapIndex(tonicIndex + pattern.semitone);
+    if (degreeIndex == chordIndex && _qualityMatches(chord.quality, pattern.quality)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 bool _qualityMatches(Quality chordQuality, Quality expected) {
   if (expected == Quality.major) {
     return chordQuality == Quality.major ||

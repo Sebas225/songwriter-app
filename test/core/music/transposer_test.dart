@@ -112,4 +112,43 @@ void main() {
       expect(getDegree(parseChord('E'), key).symbol, 'ND');
     });
   });
+
+  group('inferKeyFromChords', () {
+    test('prefers key with most diatonic matches', () {
+      final chords = [
+        parseChord('C'),
+        parseChord('Am'),
+        parseChord('F'),
+        parseChord('G'),
+      ];
+
+      final inferred = inferKeyFromChords(chords);
+
+      expect(inferred, KeySignature(tonic: Note.parse('C')));
+    });
+
+    test('counts borrowed chords with lower weight', () {
+      final chords = [
+        parseChord('G'),
+        parseChord('C'),
+        parseChord('F'), // bVII in G
+      ];
+
+      final inferred = inferKeyFromChords(chords);
+
+      expect(inferred, KeySignature(tonic: Note.parse('G')));
+    });
+
+    test('recognizes V/vi pattern as hint', () {
+      final chords = [
+        parseChord('C'),
+        parseChord('E'), // V/vi in C
+        parseChord('Am'),
+      ];
+
+      final inferred = inferKeyFromChords(chords);
+
+      expect(inferred, KeySignature(tonic: Note.parse('C')));
+    });
+  });
 }
