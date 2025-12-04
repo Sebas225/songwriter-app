@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../core/database/app_database.dart';
+import 'demo_data_seeder.dart';
 import 'repositories/line_repository.dart';
 import 'repositories/section_repository.dart';
 import 'repositories/song_repository.dart';
@@ -44,29 +45,52 @@ final lineRepositoryProvider = Provider<LineRepository>((ref) {
   return LineRepository(dao);
 });
 
+final demoDataSeederProvider = Provider<DemoDataSeeder>((ref) {
+  final songRepository = ref.watch(songRepositoryProvider);
+  final sectionRepository = ref.watch(sectionRepositoryProvider);
+  final lineRepository = ref.watch(lineRepositoryProvider);
+  final uuid = ref.watch(uuidProvider);
+  return DemoDataSeeder(
+    songRepository,
+    sectionRepository,
+    lineRepository,
+    uuid,
+  );
+});
+
+final demoDataInitializerProvider = FutureProvider<void>((ref) {
+  final seeder = ref.watch(demoDataSeederProvider);
+  return seeder.seedIfEmpty();
+});
+
 final songsProvider = StreamProvider<List<Song>>((ref) {
+  ref.watch(demoDataInitializerProvider);
   final repository = ref.watch(songRepositoryProvider);
   return repository.watchSongs();
 });
 
 final songProvider = StreamProvider.family<Song?, String>((ref, id) {
+  ref.watch(demoDataInitializerProvider);
   final repository = ref.watch(songRepositoryProvider);
   return repository.watchSongById(id);
 });
 
 final sectionsForSongProvider =
     StreamProvider.family<List<Section>, String>((ref, songId) {
+  ref.watch(demoDataInitializerProvider);
   final repository = ref.watch(sectionRepositoryProvider);
   return repository.watchSectionsForSong(songId);
 });
 
 final sectionProvider = StreamProvider.family<Section?, String>((ref, id) {
+  ref.watch(demoDataInitializerProvider);
   final repository = ref.watch(sectionRepositoryProvider);
   return repository.watchSectionById(id);
 });
 
 final linesForSectionProvider =
     StreamProvider.family<List<Line>, String>((ref, sectionId) {
+  ref.watch(demoDataInitializerProvider);
   final repository = ref.watch(lineRepositoryProvider);
   return repository.watchLinesForSection(sectionId);
 });
