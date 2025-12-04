@@ -9,6 +9,6 @@ void main() {
 
     await tester.pumpAndSettle();
 
-    expect(find.text('Home'), findsOneWidget);
+    expect(find.text('Songwriter'), findsOneWidget);
   });
 }
