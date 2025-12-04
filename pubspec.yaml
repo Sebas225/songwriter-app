@@ -1,6 +1,6 @@
 name: songwriter
 description: Songwriter app for managing songs with chords.
-version: 0.1.0+1
+version: 1.0.0+1
 publish_to: 'none'
 
 environment:
@@ -25,8 +25,22 @@ dev_dependencies:
   flutter_lints: ^3.0.2
   build_runner: ^2.4.11
   drift_dev: ^2.20.1
+  flutter_launcher_icons: ^0.13.1
 
 flutter:
   uses-material-design: true
   assets:
     - demo/sample_songs.json
+
+flutter_launcher_icons:
+  image_path: assets/app_icon.png
+  android: true
+  ios: true
+  macos:
+    generate: true
+  windows:
+    generate: true
+  web:
+    generate: false
+  linux:
+    generate: false

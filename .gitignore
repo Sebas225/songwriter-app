@@ -36,3 +36,10 @@ lib/generated_plugin_registrant.dart
 
 # Others
 .DS_Store
+
+# Generated app icons (keep binaries out of git)
+assets/app_icon.png
+android/app/src/main/res/mipmap-*/ic_launcher*.png
+ios/Runner/Assets.xcassets/AppIcon.appiconset/*
+macos/Runner/Assets.xcassets/AppIcon.appiconset/*
+windows/runner/resources/app_icon.ico
