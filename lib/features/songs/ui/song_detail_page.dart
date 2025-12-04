@@ -144,6 +144,8 @@ class SongDetailPage extends ConsumerWidget {
                                                           vertical: 4),
                                                       child: ChordInlineText(
                                                         rawText: line.rawText,
+                                                        keySignature:
+                                                            _currentKeyOrDefault(song),
                                                         showErrors: false,
                                                       ),
                                                     ),

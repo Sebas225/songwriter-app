@@ -71,4 +71,45 @@ void main() {
       expect(result.lines[1].rawText, '[E/G#] lleva a [A7#9]');
     });
   });
+
+  group('buildDiatonicScale', () {
+    test('builds major scale respecting accidentals', () {
+      final key = KeySignature(tonic: Note.parse('D'));
+      final scale = buildDiatonicScale(key).map((n) => n.symbol).toList();
+
+      expect(scale, ['D', 'E', 'F#', 'G', 'A', 'B', 'C#']);
+    });
+
+    test('builds minor scale with flats when appropriate', () {
+      final key = KeySignature(tonic: Note.parse('Bb'), isMinor: true);
+      final scale = buildDiatonicScale(key).map((n) => n.symbol).toList();
+
+      expect(scale, ['Bb', 'C', 'Db', 'Eb', 'F', 'Gb', 'Ab']);
+    });
+  });
+
+  group('getDegree', () {
+    test('returns roman numeral for diatonic chords in major', () {
+      final key = KeySignature(tonic: Note.parse('C'));
+
+      expect(getDegree(parseChord('C'), key), RomanDegree.diatonic('I'));
+      expect(getDegree(parseChord('Am'), key), RomanDegree.diatonic('vi'));
+      expect(getDegree(parseChord('Bdim'), key), RomanDegree.diatonic('vii°'));
+    });
+
+    test('returns roman numeral for diatonic chords in minor', () {
+      final key = KeySignature(tonic: Note.parse('A'), isMinor: true);
+
+      expect(getDegree(parseChord('Am'), key), RomanDegree.diatonic('i'));
+      expect(getDegree(parseChord('Bdim'), key), RomanDegree.diatonic('ii°'));
+      expect(getDegree(parseChord('C'), key), RomanDegree.diatonic('III'));
+    });
+
+    test('marks non-diatonic chords', () {
+      final key = KeySignature(tonic: Note.parse('C'));
+
+      expect(getDegree(parseChord('F#'), key).isDiatonic, false);
+      expect(getDegree(parseChord('E'), key).symbol, 'ND');
+    });
+  });
 }
