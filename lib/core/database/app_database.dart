@@ -120,6 +120,10 @@ class SectionDao extends DatabaseAccessor<AppDatabase> with _$SectionDaoMixin {
     return (select(sections)..where((tbl) => tbl.songId.equals(songId))).watch();
   }
 
+  Future<List<Section>> getForSong(String songId) {
+    return (select(sections)..where((tbl) => tbl.songId.equals(songId))).get();
+  }
+
   Stream<Section?> watchById(String id) {
     return (select(sections)..where((tbl) => tbl.id.equals(id))).watchSingleOrNull();
   }
@@ -147,6 +151,10 @@ class LineDao extends DatabaseAccessor<AppDatabase> with _$LineDaoMixin {
 
   Stream<List<Line>> watchForSection(String sectionId) {
     return (select(lines)..where((tbl) => tbl.sectionId.equals(sectionId))).watch();
+  }
+
+  Future<List<Line>> getForSection(String sectionId) {
+    return (select(lines)..where((tbl) => tbl.sectionId.equals(sectionId))).get();
   }
 
   Stream<Line?> watchById(String id) {

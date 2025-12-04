@@ -17,6 +17,10 @@ class LineRepository {
     return _lineDao.watchForSection(sectionId);
   }
 
+  Future<List<Line>> getLinesForSection(String sectionId) {
+    return _lineDao.getForSection(sectionId);
+  }
+
   Stream<Line?> watchLineById(String id) {
     return _lineDao.watchById(id);
   }

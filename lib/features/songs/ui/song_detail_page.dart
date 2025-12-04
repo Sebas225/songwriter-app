@@ -25,6 +25,11 @@ class SongDetailPage extends ConsumerWidget {
         title: const Text('Detalle de canción'),
         actions: [
           IconButton(
+            icon: const Icon(Icons.download),
+            tooltip: 'Exportar JSON',
+            onPressed: () => _exportSong(context, ref, songAsync.valueOrNull),
+          ),
+          IconButton(
             icon: const Icon(Icons.edit),
             onPressed: () => context.goNamed(
               'songEdit',
@@ -434,6 +439,29 @@ class SongDetailPage extends ConsumerWidget {
   KeySignature _currentKeyOrDefault(Song song) {
     return parseKeySignature(song.currentKey ?? song.originalKey) ??
         KeySignature(tonic: Note.parse('C'));
+  }
+
+  Future<void> _exportSong(
+    BuildContext context,
+    WidgetRef ref,
+    Song? song,
+  ) async {
+    if (song == null) return;
+
+    try {
+      final file = await ref.read(songJsonServiceProvider).exportSongToFile(song.id);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Exportada en ${file.path}')),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error al exportar: $e')),
+        );
+      }
+    }
   }
 }
 

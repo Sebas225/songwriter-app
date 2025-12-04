@@ -1,6 +1,10 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:path_provider/path_provider.dart';
 
 import '../../../core/database/app_database.dart';
 import '../../songs/data/providers.dart';
@@ -34,20 +38,38 @@ class HomePage extends ConsumerWidget {
                   ref.read(songSearchQueryProvider.notifier).state = value,
             ),
             const SizedBox(height: 16),
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton.icon(
-                icon: const Icon(Icons.add, size: 28),
-                style: FilledButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 18),
-                  textStyle: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w700,
+            Row(
+              children: [
+                Expanded(
+                  child: FilledButton.icon(
+                    icon: const Icon(Icons.add, size: 28),
+                    style: FilledButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 18),
+                      textStyle: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    label: const Text('Nueva canción'),
+                    onPressed: () => context.goNamed('songCreate'),
                   ),
                 ),
-                label: const Text('Nueva canción'),
-                onPressed: () => context.goNamed('songCreate'),
-              ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    icon: const Icon(Icons.file_open),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 18),
+                      textStyle: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    label: const Text('Importar'),
+                    onPressed: () => _importSong(context, ref),
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 16),
             Expanded(
@@ -147,6 +169,51 @@ class HomePage extends ConsumerWidget {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Canción eliminada')),
+        );
+      }
+    }
+  }
+
+  Future<void> _importSong(BuildContext context, WidgetRef ref) async {
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['json'],
+      );
+
+      if (result == null || result.files.isEmpty) return;
+
+      final picked = result.files.single;
+      File? file;
+      if (picked.path != null) {
+        file = File(picked.path!);
+      } else if (picked.bytes != null) {
+        final tempDir = await getTemporaryDirectory();
+        final tempFile = File('${tempDir.path}/${picked.name}');
+        await tempFile.writeAsBytes(picked.bytes!);
+        file = tempFile;
+      }
+
+      if (file == null) {
+        throw Exception('No se pudo leer el archivo seleccionado');
+      }
+
+      final service = ref.read(songJsonServiceProvider);
+      final song = await service.importSongFromFile(file);
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Se importó "${song.title}"')),
+        );
+        context.goNamed(
+          'songDetail',
+          pathParameters: {'id': song.id},
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error al importar: $e')),
         );
       }
     }
