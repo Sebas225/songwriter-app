@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/database/app_database.dart';
 import '../../../core/music/chord.dart';
+import '../../../core/music/chord_parser.dart';
 import '../../../core/music/transposer.dart';
 import '../data/providers.dart';
 import 'widgets/chord_inline_text.dart';
@@ -65,6 +66,12 @@ class SongDetailPage extends ConsumerWidget {
                       icon: const Icon(Icons.swap_calls),
                       label: const Text('Transponer'),
                       onPressed: () => _openTransposeDialog(context, ref, song),
+                    ),
+                    const SizedBox(width: 8),
+                    OutlinedButton.icon(
+                      icon: const Icon(Icons.search),
+                      label: const Text('Detectar tono'),
+                      onPressed: () => _detectKey(context, ref, song),
                     ),
                   ],
                 ),
@@ -309,14 +316,7 @@ class SongDetailPage extends ConsumerWidget {
     KeySignature newKey,
   ) async {
     try {
-      final sections =
-          await ref.read(sectionRepositoryProvider).watchSectionsForSong(song.id).first;
-      final lines = <Line>[];
-      for (final section in sections) {
-        final sectionLines =
-            await ref.read(lineRepositoryProvider).watchLinesForSection(section.id).first;
-        lines.addAll(sectionLines);
-      }
+      final lines = await _loadLinesForSong(ref, song);
 
       final result = transposeSong(song, newKey, lines: lines);
       for (final line in result.lines) {
@@ -336,6 +336,99 @@ class SongDetailPage extends ConsumerWidget {
         );
       }
     }
+  }
+
+  Future<void> _detectKey(
+    BuildContext context,
+    WidgetRef ref,
+    Song song,
+  ) async {
+    try {
+      final lines = await _loadLinesForSong(ref, song);
+      final chords = <Chord>[];
+
+      for (final line in lines) {
+        try {
+          chords.addAll(extractChords(line.rawText).map((token) => token.chord));
+        } on FormatException {
+          continue;
+        }
+      }
+
+      if (chords.isEmpty) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('No se encontraron acordes para detectar el tono')),
+          );
+        }
+        return;
+      }
+
+      final suggested = inferKeyFromChords(chords);
+      if (!context.mounted) return;
+
+      final apply = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Tono detectado'),
+          content: Text('Se sugiere ${keySignatureLabel(suggested)} para esta canción.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Cancelar'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('Aplicar'),
+            ),
+          ],
+        ),
+      );
+
+      if (apply == true) {
+        await _applyDetectedKey(context, ref, song, suggested);
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error al detectar tono: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _applyDetectedKey(
+    BuildContext context,
+    WidgetRef ref,
+    Song song,
+    KeySignature suggested,
+  ) async {
+    final label = keySignatureLabel(suggested);
+    final updated = song.copyWith(
+      currentKey: Value(label),
+      originalKey: song.originalKey == null ? Value(label) : const Value.absent(),
+      updatedAt: DateTime.now(),
+    );
+
+    await ref.read(songRepositoryProvider).updateSong(updated);
+
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Tono actualizado a $label')),
+      );
+    }
+  }
+
+  Future<List<Line>> _loadLinesForSong(WidgetRef ref, Song song) async {
+    final sections =
+        await ref.read(sectionRepositoryProvider).watchSectionsForSong(song.id).first;
+    final lines = <Line>[];
+    for (final section in sections) {
+      final sectionLines =
+          await ref.read(lineRepositoryProvider).watchLinesForSection(section.id).first;
+      lines.addAll(sectionLines);
+    }
+    return lines;
   }
 
   KeySignature _currentKeyOrDefault(Song song) {
